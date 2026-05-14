@@ -4,7 +4,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import {
   FiSend, FiUsers, FiDollarSign, FiList,
-  FiMessageSquare, FiFileText, FiBell, FiUserCheck
+  FiMessageSquare, FiFileText, FiBell, FiUserCheck,
+  FiZap, FiShield, FiTrendingUp, FiAlertCircle, FiMap, FiLayers, FiAlertOctagon
 } from 'react-icons/fi';
 
 const api = () => axios.create({
@@ -79,6 +80,18 @@ function Dashboard({ user }) {
     { path: '/customers', icon: <FiUserCheck />, title: 'Customers', desc: 'Manage customer accounts', count: stats.customers },
   ];
 
+  const aiFeatures = [
+    { path: '/ai/fee-calculator', icon: <FiZap />, title: 'Fee Calculator', desc: 'Estimate fees, FX rate, recipient amount' },
+    { path: '/ai/risk-assessment', icon: <FiShield />, title: 'AML Risk Assessment', desc: 'AI-powered AML/CFT screening' },
+    { path: '/ai/kyc-screen', icon: <FiUserCheck />, title: 'KYC Screening', desc: 'Sanctions and PEP screening' },
+    { path: '/ai/rate-analyzer', icon: <FiTrendingUp />, title: 'Rate Analyzer', desc: 'Historical FX trend analysis' },
+    { path: '/ai/beneficiary-risk', icon: <FiAlertCircle />, title: 'Beneficiary Risk Score', desc: 'Score recipients by history' },
+    { path: '/ai/route-optimizer', icon: <FiMap />, title: 'Smart Routing', desc: 'Cheapest/fastest path comparator' },
+    { path: '/ai/split-planner', icon: <FiLayers />, title: 'Split Planner', desc: 'Multi-leg transfer scheduler' },
+    { path: '/ai/fraud-check', icon: <FiAlertOctagon />, title: 'Fraud Detection', desc: 'Velocity and anomaly checks' },
+    { path: '/ai/receipts', icon: <FiFileText />, title: 'Compliance Receipts', desc: 'Auto-generated transfer receipts' },
+  ];
+
   const getStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
     let cls = 'badge badge-pending';
@@ -131,6 +144,17 @@ function Dashboard({ user }) {
             {f.count !== null && (
               <div className="card-count">{f.count} items</div>
             )}
+          </div>
+        ))}
+      </div>
+
+      <h2 style={{ marginTop: 32, marginBottom: 16 }}>AI Tools</h2>
+      <div className="feature-grid">
+        {aiFeatures.map(f => (
+          <div key={f.path} className="feature-card" onClick={() => navigate(f.path)}>
+            <div className="card-icon">{f.icon}</div>
+            <h3>{f.title}</h3>
+            <p>{f.desc}</p>
           </div>
         ))}
       </div>
