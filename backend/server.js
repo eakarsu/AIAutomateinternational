@@ -83,3 +83,6 @@ app.use('/api/gap-real-time-settlement-tracking-ledger', require('./routes/gap_r
 app.use('/api/gap-bulk-transfer-operations', require('./routes/gap_bulk_transfer_operations'));
 app.use('/api/gap-mobile-remitter-app', require('./routes/gap_mobile_remitter_app'));
 app.use('/api/gap-native-blockchain-settlement-option', require('./routes/gap_native_blockchain_settlement_option'));
+
+// Custom Views (international trade visualizations + utilities)
+app.use('/api/custom-views', require('./routes/customViews'));

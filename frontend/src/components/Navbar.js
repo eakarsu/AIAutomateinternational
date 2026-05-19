@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FiHome, FiSend, FiUsers, FiDollarSign, FiList,
   FiMessageSquare, FiFileText, FiBell, FiUserCheck, FiLogOut,
-  FiZap, FiShield, FiTrendingUp, FiAlertCircle, FiMap, FiLayers, FiAlertOctagon
+  FiZap, FiShield, FiTrendingUp, FiAlertCircle, FiMap, FiLayers, FiAlertOctagon,
+  FiGlobe
 } from 'react-icons/fi';
 
 const navSections = [
@@ -40,6 +41,12 @@ const navSections = [
       { path: '/ai/split-planner', label: 'Split Planner', icon: <FiLayers /> },
       { path: '/ai/fraud-check', label: 'Fraud Detection', icon: <FiAlertOctagon /> },
       { path: '/ai/receipts', label: 'Receipts', icon: <FiFileText /> },
+    ],
+  },
+  {
+    title: 'Custom',
+    items: [
+      { path: '/custom-views', label: 'Trade Views', icon: <FiGlobe /> },
     ],
   },
 ];

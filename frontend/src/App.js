@@ -26,6 +26,7 @@ import AIFraudCheck from './pages/AIFraudCheck';
 import AIReceipts from './pages/AIReceipts';
 import Webhooks from './pages/Webhooks';
 import Integrations from './pages/Integrations';
+import CustomViewsPage from './pages/CustomViewsPage';
 
 function ProtectedRoute({ token, children }) {
   if (!token) {
@@ -124,6 +125,7 @@ function App() {
         <Route path="/ai/receipts" element={wrap(<AIReceipts />)} />
         <Route path="/webhooks" element={wrap(<Webhooks />)} />
         <Route path="/integrations" element={wrap(<Integrations />)} />
+        <Route path="/custom-views" element={wrap(<CustomViewsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
