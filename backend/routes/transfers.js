@@ -1,10 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
 // All routes require authentication
 router.use(auth);
+
+// 10 transfer creations per user per day
+const transferRateLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => (req.user && req.user.id ? String(req.user.id) : req.ip),
+  message: { error: 'Daily transfer limit reached. Maximum 10 transfers per day.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // GET / - list all transfers with optional status filter
 router.get('/', async (req, res) => {
@@ -56,7 +67,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST / - create new transfer
-router.post('/', async (req, res) => {
+router.post('/', transferRateLimiter, async (req, res) => {
   try {
     const { beneficiary_id, amount, source_currency, target_currency, notes } = req.body;
 

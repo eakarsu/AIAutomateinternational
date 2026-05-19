@@ -2,9 +2,22 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { encrypt, decrypt } = require('../services/encryption');
 
 // All routes require authentication
 router.use(auth);
+
+// Decrypt sensitive fields in a beneficiary row
+function decryptBeneficiary(row) {
+  if (!row) return row;
+  try {
+    if (row.account_number) row.account_number = decrypt(row.account_number);
+  } catch { /* if not encrypted, leave as-is */ }
+  try {
+    if (row.swift_code) row.swift_code = decrypt(row.swift_code);
+  } catch { /* if not encrypted, leave as-is */ }
+  return row;
+}
 
 // GET / - list all beneficiaries for current user
 router.get('/', async (req, res) => {
@@ -13,7 +26,7 @@ router.get('/', async (req, res) => {
       'SELECT * FROM beneficiaries WHERE user_id = $1 ORDER BY created_at DESC',
       [req.user.id]
     );
-    res.json(result.rows);
+    res.json(result.rows.map(decryptBeneficiary));
   } catch (err) {
     console.error('List beneficiaries error:', err.message);
     res.status(500).json({ error: 'Failed to fetch beneficiaries' });
@@ -32,7 +45,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Beneficiary not found' });
     }
 
-    res.json(result.rows[0]);
+    res.json(decryptBeneficiary(result.rows[0]));
   } catch (err) {
     console.error('Get beneficiary error:', err.message);
     res.status(500).json({ error: 'Failed to fetch beneficiary' });
@@ -48,14 +61,19 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'name, bank_name, account_number, country, and currency are required' });
     }
 
+    let encryptedAccount = account_number;
+    let encryptedSwift = swift_code || null;
+    try { encryptedAccount = encrypt(account_number); } catch { /* encryption key not set, store plain */ }
+    try { if (swift_code) encryptedSwift = encrypt(swift_code); } catch { /* encryption key not set, store plain */ }
+
     const result = await pool.query(
       `INSERT INTO beneficiaries (user_id, name, email, bank_name, account_number, swift_code, country, currency)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [req.user.id, name, email || null, bank_name, account_number, swift_code || null, country, currency]
+      [req.user.id, name, email || null, bank_name, encryptedAccount, encryptedSwift, country, currency]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(decryptBeneficiary(result.rows[0]));
   } catch (err) {
     console.error('Create beneficiary error:', err.message);
     res.status(500).json({ error: 'Failed to create beneficiary' });
@@ -72,6 +90,15 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Beneficiary not found' });
     }
 
+    let encryptedAccount = account_number;
+    let encryptedSwift = swift_code;
+    if (account_number) {
+      try { encryptedAccount = encrypt(account_number); } catch { /* no encryption key */ }
+    }
+    if (swift_code) {
+      try { encryptedSwift = encrypt(swift_code); } catch { /* no encryption key */ }
+    }
+
     const result = await pool.query(
       `UPDATE beneficiaries
        SET name = COALESCE($1, name),
@@ -84,10 +111,10 @@ router.put('/:id', async (req, res) => {
            updated_at = NOW()
        WHERE id = $8 AND user_id = $9
        RETURNING *`,
-      [name, email, bank_name, account_number, swift_code, country, currency, req.params.id, req.user.id]
+      [name, email, bank_name, encryptedAccount, encryptedSwift, country, currency, req.params.id, req.user.id]
     );
 
-    res.json(result.rows[0]);
+    res.json(decryptBeneficiary(result.rows[0]));
   } catch (err) {
     console.error('Update beneficiary error:', err.message);
     res.status(500).json({ error: 'Failed to update beneficiary' });

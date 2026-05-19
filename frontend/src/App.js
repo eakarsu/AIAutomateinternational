@@ -14,6 +14,19 @@ import Chat from './pages/Chat';
 import Templates from './pages/Templates';
 import Alerts from './pages/Alerts';
 import Customers from './pages/Customers';
+// AI feature pages
+import AIFeeCalculator from './pages/AIFeeCalculator';
+import AIRiskAssessment from './pages/AIRiskAssessment';
+import AIKycScreen from './pages/AIKycScreen';
+import AIRateAnalyzer from './pages/AIRateAnalyzer';
+import AIBeneficiaryRisk from './pages/AIBeneficiaryRisk';
+import AIRouteOptimizer from './pages/AIRouteOptimizer';
+import AISplitPlanner from './pages/AISplitPlanner';
+import AIFraudCheck from './pages/AIFraudCheck';
+import AIReceipts from './pages/AIReceipts';
+import Webhooks from './pages/Webhooks';
+import Integrations from './pages/Integrations';
+import CustomViewsPage from './pages/CustomViewsPage';
 
 function ProtectedRoute({ token, children }) {
   if (!token) {
@@ -69,6 +82,12 @@ function App() {
     setUser(null);
   };
 
+  const wrap = (El) => (
+    <ProtectedRoute token={token}>
+      <AppLayout user={user} onLogout={handleLogout}>{El}</AppLayout>
+    </ProtectedRoute>
+  );
+
   return (
     <>
       <ToastContainer
@@ -84,72 +103,29 @@ function App() {
         theme="dark"
       />
       <Routes>
-        <Route path="/login" element={
-          token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
-        } />
-        <Route path="/" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Dashboard user={user} />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/transfers" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Transfers />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/beneficiaries" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Beneficiaries />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/currencies" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Currencies />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/transactions" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Transactions />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/chat" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Chat />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/templates" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Templates />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/alerts" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Alerts />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/customers" element={
-          <ProtectedRoute token={token}>
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Customers />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
+        <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
+        <Route path="/" element={wrap(<Dashboard user={user} />)} />
+        <Route path="/transfers" element={wrap(<Transfers />)} />
+        <Route path="/beneficiaries" element={wrap(<Beneficiaries />)} />
+        <Route path="/currencies" element={wrap(<Currencies />)} />
+        <Route path="/transactions" element={wrap(<Transactions />)} />
+        <Route path="/chat" element={wrap(<Chat />)} />
+        <Route path="/templates" element={wrap(<Templates />)} />
+        <Route path="/alerts" element={wrap(<Alerts />)} />
+        <Route path="/customers" element={wrap(<Customers />)} />
+        {/* AI feature routes */}
+        <Route path="/ai/fee-calculator" element={wrap(<AIFeeCalculator />)} />
+        <Route path="/ai/risk-assessment" element={wrap(<AIRiskAssessment />)} />
+        <Route path="/ai/kyc-screen" element={wrap(<AIKycScreen />)} />
+        <Route path="/ai/rate-analyzer" element={wrap(<AIRateAnalyzer />)} />
+        <Route path="/ai/beneficiary-risk" element={wrap(<AIBeneficiaryRisk />)} />
+        <Route path="/ai/route-optimizer" element={wrap(<AIRouteOptimizer />)} />
+        <Route path="/ai/split-planner" element={wrap(<AISplitPlanner />)} />
+        <Route path="/ai/fraud-check" element={wrap(<AIFraudCheck />)} />
+        <Route path="/ai/receipts" element={wrap(<AIReceipts />)} />
+        <Route path="/webhooks" element={wrap(<Webhooks />)} />
+        <Route path="/integrations" element={wrap(<Integrations />)} />
+        <Route path="/custom-views" element={wrap(<CustomViewsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

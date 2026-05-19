@@ -1,16 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const rateLimit = require('express-rate-limit');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
 // All routes require authentication
 router.use(auth);
 
+// 30 chat messages per user per hour
+const chatRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  keyGenerator: (req) => (req.user && req.user.id ? String(req.user.id) : req.ip),
+  message: { error: 'Too many chat messages. Limit is 30 per hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const SYSTEM_PROMPT = `You are a professional international money transfer assistant for AIAutomate International. You help customers with currency exchange, international transfers, and banking queries. Be helpful, professional, and concise. When a customer wants to make a transfer, collect: recipient name, recipient country, amount, currency, and bank details. Provide exchange rate information when asked.`;
 
 // POST / - send message to AI
-router.post('/', async (req, res) => {
+router.post('/', chatRateLimiter, async (req, res) => {
   try {
     const { message } = req.body;
 
@@ -79,6 +90,20 @@ router.get('/history', async (req, res) => {
   } catch (err) {
     console.error('Chat history error:', err.message);
     res.status(500).json({ error: 'Failed to fetch chat history' });
+  }
+});
+
+// DELETE /history/cleanup - delete messages older than 30 days (internal/admin use)
+router.delete('/history/cleanup', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `DELETE FROM chat_messages WHERE created_at < NOW() - INTERVAL '30 days' AND user_id = $1`,
+      [req.user.id]
+    );
+    res.json({ deleted: result.rowCount, message: 'Old messages cleaned up' });
+  } catch (err) {
+    console.error('Chat cleanup error:', err.message);
+    res.status(500).json({ error: 'Failed to cleanup chat history' });
   }
 });
 
