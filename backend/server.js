@@ -38,6 +38,7 @@ app.use('/api/ai', require('./routes/aiTransfer'));
 app.use('/api/ai-features', require('./routes/aiFeatures'));
 app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api/integrations', require('./routes/integrations'));
+app.use('/api/corridor-liquidity-risk', require('./routes/corridorLiquidityRisk'));
 
 // Chat history cleanup: delete messages older than 30 days every hour
 const pool = require('./db');

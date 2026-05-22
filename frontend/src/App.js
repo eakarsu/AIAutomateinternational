@@ -27,6 +27,12 @@ import AIReceipts from './pages/AIReceipts';
 import Webhooks from './pages/Webhooks';
 import Integrations from './pages/Integrations';
 import CustomViewsPage from './pages/CustomViewsPage';
+import CorridorLiquidityRisk from './pages/CorridorLiquidityRisk';
+
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
+import TimelineView from './pages/TimelineView';
 
 function ProtectedRoute({ token, children }) {
   if (!token) {
@@ -103,6 +109,10 @@ function App() {
         theme="dark"
       />
       <Routes>
+        <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
         <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
         <Route path="/" element={wrap(<Dashboard user={user} />)} />
         <Route path="/transfers" element={wrap(<Transfers />)} />
@@ -126,6 +136,7 @@ function App() {
         <Route path="/webhooks" element={wrap(<Webhooks />)} />
         <Route path="/integrations" element={wrap(<Integrations />)} />
         <Route path="/custom-views" element={wrap(<CustomViewsPage />)} />
+        <Route path="/corridor-liquidity-risk" element={wrap(<CorridorLiquidityRisk />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
