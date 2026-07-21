@@ -13,6 +13,7 @@ router.post('/register', async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
+    if (password.length < 12) return res.status(400).json({ error: 'Password must be at least 12 characters' });
 
     // Check if user already exists
     const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
