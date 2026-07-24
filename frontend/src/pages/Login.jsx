@@ -31,8 +31,8 @@ function Login({ onLogin }) {
   };
 
   const handleQuickLogin = () => {
-    setEmail('demo@aiautomateintl.com');
-    setPassword('password123');
+    setEmail(import.meta.env.VITE_DEMO_EMAIL || '');
+    setPassword(import.meta.env.VITE_DEMO_PASSWORD || '');
     setTimeout(() => {
       document.getElementById('login-form').requestSubmit();
     }, 100);
