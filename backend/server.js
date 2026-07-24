@@ -17,6 +17,7 @@ const PORT = process.env.BACKEND_PORT || 3001;
 const allowedOrigins=(process.env.CORS_ORIGINS||'').split(',').map(x=>x.trim()).filter(Boolean);
 app.use(cors({origin:(origin,cb)=>!origin||allowedOrigins.includes(origin)?cb(null,true):cb(new Error('CORS origin not allowed')),credentials:true}));
 app.use(express.json());
+app.use('/api', require('./runtimeAcceptance'));
 
 // Health check
 app.get('/api/health', (req, res) => {

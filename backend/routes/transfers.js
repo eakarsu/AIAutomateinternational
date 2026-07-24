@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = rateLimit;
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
@@ -11,7 +12,7 @@ router.use(auth);
 const transferRateLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
   max: 10,
-  keyGenerator: (req) => (req.user && req.user.id ? String(req.user.id) : req.ip),
+  keyGenerator: (req) => (req.user && req.user.id ? String(req.user.id) : ipKeyGenerator(req.ip)),
   message: { error: 'Daily transfer limit reached. Maximum 10 transfers per day.' },
   standardHeaders: true,
   legacyHeaders: false,

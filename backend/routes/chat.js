@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = rateLimit;
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
@@ -12,7 +13,7 @@ router.use(auth);
 const chatRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 30,
-  keyGenerator: (req) => (req.user && req.user.id ? String(req.user.id) : req.ip),
+  keyGenerator: (req) => (req.user && req.user.id ? String(req.user.id) : ipKeyGenerator(req.ip)),
   message: { error: 'Too many chat messages. Limit is 30 per hour.' },
   standardHeaders: true,
   legacyHeaders: false,
