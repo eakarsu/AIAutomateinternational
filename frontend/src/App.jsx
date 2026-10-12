@@ -1,5 +1,6 @@
+import AIReportLibrary from "./components/AIReportLibrary";
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -55,7 +56,6 @@ function AppLayout({ children, user, onLogout }) {
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(null);
-  const location = useLocation();
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
@@ -96,6 +96,7 @@ function App() {
 
   return (
     <>
+      {token && <AIReportLibrary floating token={token} />}
       <ToastContainer
         position="top-right"
         autoClose={3000}

@@ -1,4 +1,6 @@
 import React from 'react';
+import { StructuredValue } from './AIReport';
+import { createPortal } from 'react-dom';
 import { FiX } from 'react-icons/fi';
 
 function DetailModal({ isOpen, onClose, title, data, onEdit, onDelete }) {
@@ -39,12 +41,12 @@ function DetailModal({ isOpen, onClose, title, data, onEdit, onDelete }) {
 
   const entries = Object.entries(data).filter(([key]) => key !== '__v');
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-content">
         <div className="modal-header">
           <h2>{title || 'Details'}</h2>
-          <button className="modal-close" onClick={onClose}><FiX /></button>
+          <button type="button" className="modal-close" aria-label="Cancel" onClick={onClose}><FiX /></button>
         </div>
         <div className="modal-body">
           <div className="detail-grid">
@@ -58,7 +60,7 @@ function DetailModal({ isOpen, onClose, title, data, onEdit, onDelete }) {
                     {statusClass ? (
                       <span className={statusClass}>{formatValue(value)}</span>
                     ) : (
-                      formatValue(value)
+                      typeof value === 'object' && value !== null ? <StructuredValue value={value} /> : formatValue(value)
                     )}
                   </div>
                 </div>
@@ -67,21 +69,25 @@ function DetailModal({ isOpen, onClose, title, data, onEdit, onDelete }) {
           </div>
         </div>
         {(onEdit || onDelete) && (
-          <div className="modal-footer">
-            {onDelete && (
-              <button className="btn btn-danger btn-sm" onClick={() => onDelete(data)}>
-                Delete
+          <div className="modal-footer modal-footer-centered">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={onClose}>
+              Cancel
+            </button>
+            {onEdit && (
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => onEdit(data)}>
+                Edit
               </button>
             )}
-            {onEdit && (
-              <button className="btn btn-primary btn-sm" onClick={() => onEdit(data)}>
-                Edit
+            {onDelete && (
+              <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(data)}>
+                Delete
               </button>
             )}
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

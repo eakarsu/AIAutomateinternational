@@ -3,6 +3,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import DetailModal from '../components/DetailModal';
+import LoadError from '../components/LoadError';
+import { recordRows } from '../services/recordRows';
 
 const api = () => axios.create({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -13,6 +15,7 @@ function Transfers() {
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [selectedTransfer, setSelectedTransfer] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -24,17 +27,23 @@ function Transfers() {
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const [tRes, bRes, cRes] = await Promise.allSettled([
         api().get('/api/transfers'),
         api().get('/api/beneficiaries'),
         api().get('/api/currencies')
       ]);
-      const arr = (r) => { if (r.status === 'fulfilled') { const d = r.value.data; return Array.isArray(d) ? d : (d.data || d.transfers || d.beneficiaries || d.currencies || []); } return []; };
-      setTransfers(arr(tRes));
-      setBeneficiaries(arr(bRes));
-      setCurrencies(arr(cRes));
+      const arr = (r, key) => {
+        if (r.status === 'rejected') throw r.reason;
+        return recordRows(r.value.data, key);
+      };
+      setTransfers(arr(tRes, 'transfers'));
+      setBeneficiaries(arr(bRes, 'beneficiaries'));
+      setCurrencies(arr(cRes, 'currencies'));
     } catch (err) {
+      setLoadError('Failed to load transfers.');
       toast.error('Failed to load transfers');
     } finally { setLoading(false); }
   };
@@ -99,6 +108,7 @@ function Transfers() {
   });
 
   if (loading) return <div className="loading"><div className="loading-spinner"></div>Loading...</div>;
+  if (loadError) return <LoadError message={loadError} onRetry={fetchAll} />;
 
   return (
     <div>

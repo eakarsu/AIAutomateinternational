@@ -3,6 +3,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import DetailModal from '../components/DetailModal';
+import LoadError from '../components/LoadError';
+import { recordRows } from '../services/recordRows';
 
 const api = () => axios.create({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -11,6 +13,7 @@ const api = () => axios.create({
 function Transactions() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
@@ -20,11 +23,14 @@ function Transactions() {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const res = await api().get('/api/transactions');
       const d = res.data;
-      setItems(Array.isArray(d) ? d : (d.data || d.transactions || []));
+      setItems(recordRows(d, 'transactions'));
     } catch (err) {
+      setLoadError('Failed to load transactions.');
       toast.error('Failed to load transactions');
     } finally { setLoading(false); }
   };
@@ -71,6 +77,7 @@ function Transactions() {
   const tabs = ['all', 'deposit', 'withdrawal', 'transfer', 'exchange'];
 
   if (loading) return <div className="loading"><div className="loading-spinner"></div>Loading...</div>;
+  if (loadError) return <LoadError message={loadError} onRetry={fetchData} />;
 
   return (
     <div>

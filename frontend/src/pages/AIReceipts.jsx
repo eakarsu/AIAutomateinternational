@@ -1,3 +1,6 @@
+import { recordRows } from '../services/recordRows';
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiFileText, FiDownload } from 'react-icons/fi';
@@ -14,7 +17,7 @@ function AIReceipts() {
       .list()
       .then((r) => {
         const d = r.data;
-        setTransfers(Array.isArray(d) ? d : d.data || d.transfers || []);
+        setTransfers(recordRows(d, 'transfers'));
       })
       .catch(() => {});
   }, []);
@@ -59,6 +62,7 @@ function AIReceipts() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="receipt" value={selected} onChange={setSelected} records={transfers} disabled={loading} />
         <form onSubmit={fetchReceipt}>
           <div className="form-group">
             <label>Transfer</label>
@@ -107,6 +111,7 @@ function AIReceipts() {
           </table>
         </div>
       )}
+      {receipt && <AIReport response={receipt} title="Transfer Receipt" />}
     </div>
   );
 }

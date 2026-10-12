@@ -1,3 +1,6 @@
+import { recordRows } from '../services/recordRows';
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiAlertCircle, FiUsers } from 'react-icons/fi';
@@ -14,7 +17,7 @@ function AIBeneficiaryRisk() {
       .list()
       .then((r) => {
         const d = r.data;
-        setBeneficiaries(Array.isArray(d) ? d : d.data || d.beneficiaries || []);
+        setBeneficiaries(recordRows(d, 'beneficiaries'));
       })
       .catch(() => {});
   }, []);
@@ -47,6 +50,7 @@ function AIBeneficiaryRisk() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="beneficiary" value={selected} onChange={setSelected} records={beneficiaries} disabled={loading} />
         <form onSubmit={submit}>
           <div className="form-group">
             <label>Beneficiary</label>
@@ -80,6 +84,7 @@ function AIBeneficiaryRisk() {
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>Assessed: {result.assessed_at}</p>
         </div>
       )}
+      {result && <AIReport response={result} title="Beneficiary Risk" />}
     </div>
   );
 }

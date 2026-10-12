@@ -1,3 +1,6 @@
+import { recordRows } from '../services/recordRows';
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiTrendingUp, FiBarChart2 } from 'react-icons/fi';
@@ -14,7 +17,7 @@ function AIRateAnalyzer() {
       .list()
       .then((r) => {
         const d = r.data;
-        setCurrencies(Array.isArray(d) ? d : d.data || d.currencies || []);
+        setCurrencies(recordRows(d, 'currencies'));
       })
       .catch(() => {});
   }, []);
@@ -68,6 +71,7 @@ function AIRateAnalyzer() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="rate" value={form} onChange={setForm} currencies={currencies} disabled={loading} />
         <form onSubmit={submit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div className="form-group">
@@ -100,6 +104,7 @@ function AIRateAnalyzer() {
           </div>
         </div>
       )}
+      {result && <AIReport response={result} title="Rate Analysis" />}
     </div>
   );
 }

@@ -9,10 +9,12 @@ router.use(auth);
 // GET / - list all alerts for user
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM rate_alerts WHERE user_id = $1 ORDER BY created_at DESC',
-      [req.user.id]
-    );
+    const result = req.user.role === 'admin'
+      ? await pool.query('SELECT * FROM alerts ORDER BY created_at DESC')
+      : await pool.query(
+        'SELECT * FROM alerts WHERE user_id = $1 ORDER BY created_at DESC',
+        [req.user.id]
+      );
     res.json(result.rows);
   } catch (err) {
     console.error('List alerts error:', err.message);
@@ -24,7 +26,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM rate_alerts WHERE id = $1 AND user_id = $2',
+      'SELECT * FROM alerts WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.id]
     );
 
@@ -53,7 +55,7 @@ router.post('/', async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO rate_alerts (user_id, currency_pair, target_rate, direction, is_active)
+      `INSERT INTO alerts (user_id, currency_pair, target_rate, direction, is_active)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [req.user.id, currency_pair, target_rate, direction, is_active !== undefined ? is_active : true]
@@ -71,13 +73,13 @@ router.put('/:id', async (req, res) => {
   try {
     const { currency_pair, target_rate, direction, is_active } = req.body;
 
-    const existing = await pool.query('SELECT * FROM rate_alerts WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+    const existing = await pool.query('SELECT * FROM alerts WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
     if (existing.rows.length === 0) {
       return res.status(404).json({ error: 'Alert not found' });
     }
 
     const result = await pool.query(
-      `UPDATE rate_alerts
+      `UPDATE alerts
        SET currency_pair = COALESCE($1, currency_pair),
            target_rate = COALESCE($2, target_rate),
            direction = COALESCE($3, direction),
@@ -99,7 +101,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const result = await pool.query(
-      'DELETE FROM rate_alerts WHERE id = $1 AND user_id = $2 RETURNING *',
+      'DELETE FROM alerts WHERE id = $1 AND user_id = $2 RETURNING *',
       [req.params.id, req.user.id]
     );
 
@@ -117,7 +119,7 @@ router.delete('/:id', async (req, res) => {
 // POST /:id/toggle - toggle alert active/inactive
 router.post('/:id/toggle', async (req, res) => {
   try {
-    const existing = await pool.query('SELECT * FROM rate_alerts WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+    const existing = await pool.query('SELECT * FROM alerts WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
     if (existing.rows.length === 0) {
       return res.status(404).json({ error: 'Alert not found' });
     }
@@ -125,7 +127,7 @@ router.post('/:id/toggle', async (req, res) => {
     const newActive = !existing.rows[0].is_active;
 
     const result = await pool.query(
-      'UPDATE rate_alerts SET is_active = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3 RETURNING *',
+      'UPDATE alerts SET is_active = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3 RETURNING *',
       [newActive, req.params.id, req.user.id]
     );
 

@@ -3,6 +3,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FiPlus, FiSearch, FiX, FiPlay } from 'react-icons/fi';
 import DetailModal from '../components/DetailModal';
+import LoadError from '../components/LoadError';
+import { recordRows } from '../services/recordRows';
 
 const api = () => axios.create({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -11,6 +13,7 @@ const api = () => axios.create({
 function Templates() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -23,11 +26,14 @@ function Templates() {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const res = await api().get('/api/templates');
       const d = res.data;
-      setItems(Array.isArray(d) ? d : (d.data || d.templates || []));
+      setItems(recordRows(d, 'templates'));
     } catch (err) {
+      setLoadError('Failed to load templates.');
       toast.error('Failed to load templates');
     } finally { setLoading(false); }
   };
@@ -102,6 +108,7 @@ function Templates() {
   });
 
   if (loading) return <div className="loading"><div className="loading-spinner"></div>Loading...</div>;
+  if (loadError) return <LoadError message={loadError} onRetry={fetchData} />;
 
   return (
     <div>

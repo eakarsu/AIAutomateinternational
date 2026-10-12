@@ -9,14 +9,21 @@ router.use(auth);
 // GET / - list all templates for user
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT t.*, b.name AS beneficiary_name
-       FROM transfer_templates t
-       LEFT JOIN beneficiaries b ON t.beneficiary_id = b.id
-       WHERE t.user_id = $1
-       ORDER BY t.created_at DESC`,
-      [req.user.id]
-    );
+    const result = req.user.role === 'admin'
+      ? await pool.query(
+        `SELECT t.*, b.name AS beneficiary_name
+         FROM transfer_templates t
+         LEFT JOIN beneficiaries b ON t.beneficiary_id = b.id
+         ORDER BY t.created_at DESC`
+      )
+      : await pool.query(
+        `SELECT t.*, b.name AS beneficiary_name
+         FROM transfer_templates t
+         LEFT JOIN beneficiaries b ON t.beneficiary_id = b.id
+         WHERE t.user_id = $1
+         ORDER BY t.created_at DESC`,
+        [req.user.id]
+      );
     res.json(result.rows);
   } catch (err) {
     console.error('List templates error:', err.message);

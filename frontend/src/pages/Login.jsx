@@ -9,15 +9,10 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+  const login = async (loginEmail, loginPassword) => {
     setLoading(true);
     try {
-      const res = await axios.post('/api/auth/login', { email, password });
+      const res = await axios.post('/api/auth/login', { email: loginEmail, password: loginPassword });
       const { token, user } = res.data;
       onLogin(token, user);
       toast.success('Welcome back!');
@@ -30,9 +25,27 @@ function Login({ onLogin }) {
     }
   };
 
-  const handleQuickLogin = () => {
-    setEmail(import.meta.env.VITE_DEMO_EMAIL || '');
-    setPassword(import.meta.env.VITE_DEMO_PASSWORD || '');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    await login(email, password);
+  };
+
+  const handleQuickLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post('/api/auth/demo-login');
+      onLogin(res.data.token, res.data.user);
+      toast.success('Welcome back!');
+      navigate('/');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Demo login is unavailable');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,8 +80,8 @@ function Login({ onLogin }) {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
           <div className="login-divider">or</div>
-          <button type="button" className="quick-login-btn" onClick={handleQuickLogin}>
-            Auto Fill Demo Credentials
+          <button type="button" className="quick-login-btn" onClick={handleQuickLogin} disabled={loading}>
+            {loading ? 'Signing in...' : 'Log In as Demo'}
           </button>
         </form>
       </div>

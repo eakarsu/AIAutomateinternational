@@ -10,12 +10,17 @@ router.use(auth);
 router.get('/', async (req, res) => {
   try {
     const { type } = req.query;
-    let query = 'SELECT * FROM transactions WHERE user_id = $1';
-    const params = [req.user.id];
+    const isAdmin = req.user.role === 'admin';
+    let query = 'SELECT * FROM transactions';
+    const params = [];
 
+    if (!isAdmin) {
+      params.push(req.user.id);
+      query += ' WHERE user_id = $1';
+    }
     if (type) {
-      query += ' AND type = $2';
       params.push(type);
+      query += `${params.length === 1 ? ' WHERE' : ' AND'} type = $${params.length}`;
     }
 
     query += ' ORDER BY created_at DESC';

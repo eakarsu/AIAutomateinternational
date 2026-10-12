@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { recordRows } from '../services/recordRows';
+import LoadError from '../components/LoadError';
 import { toast } from 'react-toastify';
 import {
   FiSend, FiUsers, FiDollarSign, FiList,
@@ -20,12 +22,15 @@ function Dashboard({ user }) {
   });
   const [recentTransfers, setRecentTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const endpoints = [
         '/api/transfers', '/api/beneficiaries', '/api/currencies',
@@ -35,21 +40,18 @@ function Dashboard({ user }) {
         endpoints.map(ep => api().get(ep))
       );
 
-      const getData = (res) => {
-        if (res.status === 'fulfilled') {
-          const d = res.value.data;
-          return Array.isArray(d) ? d : (d.data || d.transfers || d.beneficiaries || d.currencies || d.alerts || d.transactions || d.templates || d.customers || []);
-        }
-        return [];
+      const getData = (res, key) => {
+        if (res.status === 'rejected') throw res.reason;
+        return recordRows(res.value.data, key);
       };
 
-      const transfers = getData(results[0]);
-      const beneficiaries = getData(results[1]);
-      const currencies = getData(results[2]);
-      const alerts = getData(results[3]);
-      const transactions = getData(results[4]);
-      const templates = getData(results[5]);
-      const customers = getData(results[6]);
+      const transfers = getData(results[0], 'transfers');
+      const beneficiaries = getData(results[1], 'beneficiaries');
+      const currencies = getData(results[2], 'currencies');
+      const alerts = getData(results[3], 'alerts');
+      const transactions = getData(results[4], 'transactions');
+      const templates = getData(results[5], 'templates');
+      const customers = getData(results[6], 'customers');
 
       setStats({
         transfers: transfers.length,
@@ -61,8 +63,9 @@ function Dashboard({ user }) {
         customers: customers.length
       });
 
-      setRecentTransfers(transfers.slice(-5).reverse());
+      setRecentTransfers(transfers.slice(-15).reverse());
     } catch (err) {
+      setLoadError('Failed to load dashboard data.');
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -104,6 +107,7 @@ function Dashboard({ user }) {
   if (loading) {
     return <div className="loading"><div className="loading-spinner"></div>Loading dashboard...</div>;
   }
+  if (loadError) return <LoadError message={loadError} onRetry={fetchData} />;
 
   return (
     <div>

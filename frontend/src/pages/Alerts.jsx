@@ -3,6 +3,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import DetailModal from '../components/DetailModal';
+import LoadError from '../components/LoadError';
+import { recordRows } from '../services/recordRows';
 
 const api = () => axios.create({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -11,6 +13,7 @@ const api = () => axios.create({
 function Alerts() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -22,11 +25,14 @@ function Alerts() {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const res = await api().get('/api/alerts');
       const d = res.data;
-      setItems(Array.isArray(d) ? d : (d.data || d.alerts || []));
+      setItems(recordRows(d, 'alerts'));
     } catch (err) {
+      setLoadError('Failed to load alerts.');
       toast.error('Failed to load alerts');
     } finally { setLoading(false); }
   };
@@ -96,6 +102,7 @@ function Alerts() {
   const isActive = (item) => item.is_active === true || item.is_active === 't';
 
   if (loading) return <div className="loading"><div className="loading-spinner"></div>Loading...</div>;
+  if (loadError) return <LoadError message={loadError} onRetry={fetchData} />;
 
   return (
     <div>

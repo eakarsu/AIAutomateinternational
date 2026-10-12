@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiBell, FiPlus, FiTrash2, FiSend } from 'react-icons/fi';
 import { webhooksApi } from '../services/api';
+import { recordRows } from '../services/recordRows';
+import LoadError from '../components/LoadError';
 
 const ALLOWED_EVENTS = [
   'transfer.created',
@@ -15,16 +17,19 @@ const ALLOWED_EVENTS = [
 function Webhooks() {
   const [webhooks, setWebhooks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ url: '', secret: '', events: ['transfer.created'] });
   const [testResult, setTestResult] = useState(null);
 
   const load = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const r = await webhooksApi.list();
-      setWebhooks(Array.isArray(r.data) ? r.data : []);
+      setWebhooks(recordRows(r.data, 'webhooks'));
     } catch (err) {
+      setLoadError('Failed to load webhooks.');
       toast.error(err.response?.data?.error || 'Failed to load webhooks');
     } finally {
       setLoading(false);
@@ -77,6 +82,8 @@ function Webhooks() {
       toast.error(err.response?.data?.error || 'Test failed');
     }
   };
+
+  if (loadError) return <LoadError message={loadError} onRetry={load} />;
 
   return (
     <div>

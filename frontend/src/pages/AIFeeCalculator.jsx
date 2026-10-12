@@ -1,3 +1,6 @@
+import { recordRows } from '../services/recordRows';
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiDollarSign, FiZap } from 'react-icons/fi';
@@ -19,7 +22,7 @@ function AIFeeCalculator() {
       .list()
       .then((r) => {
         const d = r.data;
-        setCurrencies(Array.isArray(d) ? d : d.data || d.currencies || []);
+        setCurrencies(recordRows(d, 'currencies'));
       })
       .catch(() => {});
   }, []);
@@ -55,6 +58,7 @@ function AIFeeCalculator() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="fee" value={form} onChange={setForm} currencies={currencies} disabled={loading} />
         <form onSubmit={submit}>
           <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div className="form-group">
@@ -104,6 +108,7 @@ function AIFeeCalculator() {
           </table>
         </div>
       )}
+      {result && <AIReport response={result} title="Transfer Cost" />}
     </div>
   );
 }

@@ -1,3 +1,6 @@
+import { recordRows } from '../services/recordRows';
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiShield, FiAlertOctagon } from 'react-icons/fi';
@@ -14,7 +17,7 @@ function AIFraudCheck() {
       .list()
       .then((r) => {
         const d = r.data;
-        setBeneficiaries(Array.isArray(d) ? d : d.data || d.beneficiaries || []);
+        setBeneficiaries(recordRows(d, 'beneficiaries'));
       })
       .catch(() => {});
   }, []);
@@ -49,6 +52,7 @@ function AIFraudCheck() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="fraud" value={form} onChange={setForm} records={beneficiaries} disabled={loading} />
         <form onSubmit={submit}>
           <div className="form-group"><label>Amount</label><input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required /></div>
           <div className="form-group">
@@ -83,6 +87,7 @@ function AIFraudCheck() {
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>User avg: {result.user_avg_amount} | Max: {result.user_max_amount}</p>
         </div>
       )}
+      {result && <AIReport response={result} title="Fraud Check" />}
     </div>
   );
 }

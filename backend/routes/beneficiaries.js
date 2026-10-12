@@ -22,10 +22,12 @@ function decryptBeneficiary(row) {
 // GET / - list all beneficiaries for current user
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM beneficiaries WHERE user_id = $1 ORDER BY created_at DESC',
-      [req.user.id]
-    );
+    const result = req.user.role === 'admin'
+      ? await pool.query('SELECT * FROM beneficiaries ORDER BY created_at DESC')
+      : await pool.query(
+        'SELECT * FROM beneficiaries WHERE user_id = $1 ORDER BY created_at DESC',
+        [req.user.id]
+      );
     res.json(result.rows.map(decryptBeneficiary));
   } catch (err) {
     console.error('List beneficiaries error:', err.message);

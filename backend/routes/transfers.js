@@ -22,17 +22,21 @@ const transferRateLimiter = rateLimit({
 router.get('/', async (req, res) => {
   try {
     const { status } = req.query;
+    const isAdmin = req.user.role === 'admin';
     let query = `
       SELECT t.*, b.name AS recipient_name
       FROM transfers t
       LEFT JOIN beneficiaries b ON t.beneficiary_id = b.id
-      WHERE t.sender_id = $1
     `;
-    const params = [req.user.id];
+    const params = [];
 
+    if (!isAdmin) {
+      params.push(req.user.id);
+      query += ' WHERE t.sender_id = $1';
+    }
     if (status) {
-      query += ' AND t.status = $2';
       params.push(status);
+      query += `${params.length === 1 ? ' WHERE' : ' AND'} t.status = $${params.length}`;
     }
 
     query += ' ORDER BY t.created_at DESC';

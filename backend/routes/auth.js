@@ -81,6 +81,26 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Development-only sign-in for the account already configured in the local environment.
+// No account is created or altered, and credentials never reach the browser.
+router.post('/demo-login', async (_req, res) => {
+  if (process.env.NODE_ENV === 'production' || !process.env.DEMO_EMAIL || !process.env.DEMO_PASSWORD) {
+    return res.status(503).json({ error: 'Demo login is not configured for this environment' });
+  }
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [process.env.DEMO_EMAIL]);
+    const user = result.rows[0];
+    if (!user || !await bcrypt.compare(process.env.DEMO_PASSWORD, user.password)) {
+      return res.status(503).json({ error: 'Configured demo account is unavailable' });
+    }
+    const token = jwt.sign({ id: user.id, email: user.email, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    return res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, created_at: user.created_at } });
+  } catch (err) {
+    console.error('Demo login error:', err.message);
+    return res.status(500).json({ error: 'Server error during demo login' });
+  }
+});
+
 // GET /me
 router.get('/me', auth, async (req, res) => {
   try {

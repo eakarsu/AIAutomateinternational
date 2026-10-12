@@ -1,3 +1,5 @@
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { FiLayers, FiZap } from 'react-icons/fi';
@@ -39,6 +41,7 @@ function AISplitPlanner() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="split" value={form} onChange={setForm} disabled={loading} />
         <form onSubmit={submit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
             <div className="form-group"><label>Total amount</label><input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required /></div>
@@ -69,6 +72,7 @@ function AISplitPlanner() {
           </div>
         </>
       )}
+      {result && <AIReport response={result} title="Split Plan" />}
     </div>
   );
 }

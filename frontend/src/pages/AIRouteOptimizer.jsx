@@ -1,3 +1,5 @@
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { FiMap, FiZap } from 'react-icons/fi';
@@ -42,6 +44,7 @@ function AIRouteOptimizer() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="route" value={form} onChange={setForm} disabled={loading} />
         <form onSubmit={submit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
             <div className="form-group"><label>Amount</label><input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required /></div>
@@ -78,6 +81,7 @@ function AIRouteOptimizer() {
           </div>
         </>
       )}
+      {result && <AIReport response={result} title="Route Optimization" />}
     </div>
   );
 }

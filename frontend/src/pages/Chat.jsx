@@ -1,5 +1,7 @@
+import { StructuredValue } from '../components/AIReport';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { recordRows } from '../services/recordRows';
 import { toast } from 'react-toastify';
 import { FiSend } from 'react-icons/fi';
 
@@ -32,14 +34,14 @@ function Chat() {
     try {
       const res = await api().get('/api/chat/history');
       const d = res.data;
-      const history = Array.isArray(d) ? d : (d.data || d.messages || d.chats || []);
+      const history = recordRows(d, 'messages');
       const mapped = [];
       history.forEach(msg => {
         if (msg.userMessage || msg.message) {
           mapped.push({ role: 'user', content: msg.userMessage || msg.message, timestamp: msg.created_at });
         }
-        if (msg.aiResponse || msg.response || msg.reply) {
-          mapped.push({ role: 'ai', content: msg.aiResponse || msg.response || msg.reply, timestamp: msg.created_at });
+        if ((msg.aiResponse ?? msg.response ?? msg.reply) !== undefined && (msg.aiResponse ?? msg.response ?? msg.reply) !== null) {
+          mapped.push({ role: 'ai', content: msg.aiResponse ?? msg.response ?? msg.reply, timestamp: msg.created_at });
         }
         if (msg.role) {
           mapped.push({ role: msg.role === 'user' ? 'user' : 'ai', content: msg.content || msg.message, timestamp: msg.created_at });
@@ -67,7 +69,7 @@ function Chat() {
     try {
       const res = await api().post('/api/chat', { message: msgText });
       const d = res.data;
-      const aiContent = d.response || d.reply || d.aiResponse || d.message || d.data?.response || JSON.stringify(d);
+      const aiContent = d.response ?? d.reply ?? d.aiResponse ?? d.message ?? d.data?.response ?? d;
       const aiMsg = { role: 'ai', content: aiContent, timestamp: new Date().toISOString() };
       setMessages(prev => [...prev, aiMsg]);
     } catch (err) {
@@ -87,14 +89,14 @@ function Chat() {
   };
 
   const formatAIMessage = (content) => {
-    if (!content) return <p>No response</p>;
+    if (content === null || content === undefined) return <p>No response</p>;
 
     // If it's a JSON string, try to parse and format it
     if (typeof content === 'string') {
       try {
         const parsed = JSON.parse(content);
-        if (typeof parsed === 'object') {
-          return formatObject(parsed);
+        if (parsed && typeof parsed === 'object') {
+          return <StructuredValue value={parsed} />;
         }
       } catch {
         // Not JSON, format as text
@@ -102,7 +104,7 @@ function Chat() {
     }
 
     if (typeof content === 'object') {
-      return formatObject(content);
+      return <StructuredValue value={content} />;
     }
 
     // Format text content
@@ -172,29 +174,6 @@ function Chat() {
     return paragraphs.map((p, i) => <p key={i}>{p}</p>);
   };
 
-  const formatObject = (obj) => {
-    if (obj.rate || obj.exchangeRate) {
-      return (
-        <div>
-          <div className="rate-card">
-            <div className="rate-label">{obj.from || obj.sourceCurrency || ''} to {obj.to || obj.targetCurrency || ''}</div>
-            <div className="rate-value">{obj.rate || obj.exchangeRate}</div>
-          </div>
-          {obj.message && <p>{obj.message}</p>}
-        </div>
-      );
-    }
-    if (obj.message) return <p>{obj.message}</p>;
-    if (obj.text) return <p>{obj.text}</p>;
-    // Generic object display
-    return (
-      <div>
-        {Object.entries(obj).map(([k, v]) => (
-          <p key={k}><strong>{k}:</strong> {typeof v === 'object' ? JSON.stringify(v) : String(v)}</p>
-        ))}
-      </div>
-    );
-  };
 
   if (historyLoading) return <div className="loading"><div className="loading-spinner"></div>Loading chat...</div>;
 

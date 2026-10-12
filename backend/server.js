@@ -26,6 +26,17 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+
+// Advisory AI reports only; native execution and approval routes stay unchanged.
+const aiWorkspaceSupport = require('./aiWorkspaceAdapters.cjs');
+const aiWorkspaceDatabase = require('./db.js');
+app.use('/api/report-workspace', require('./aiWorkspace.cjs').createAIWorkspaceRouter({
+  pool: aiWorkspaceDatabase,
+  authenticateToken: aiWorkspaceSupport.runtimeSessionAuth(aiWorkspaceDatabase, require('./middleware/auth.js')),
+  aiRateLimiter: aiWorkspaceSupport.createWorkspaceLimiter(),
+  features: require('./aiWorkspaceFeatures.json'),
+}));
+
 app.use('/api', (req, res, next) => req.path === '/health' ? next() : require('./middleware/auth')(req, res, next));
 app.use('/api/transfers', require('./routes/transfers'));
 app.use('/api/beneficiaries', require('./routes/beneficiaries'));
@@ -68,5 +79,14 @@ if (process.env.ENABLE_BACKGROUND_JOBS === 'true') {
 
 // Custom Views (international trade visualizations + utilities)
 app.use('/api/custom-views', require('./routes/customViews'));
+
+// AI transfer assistant (POST /api/ai/calculate-fee, POST /api/ai/assess-transfer).
+// These were defined in routes/aiTransfer.js but never mounted, so the frontend's
+// /api/ai/* calls fell through to a 404.
+app.use('/api/ai', require('./routes/aiTransfer'));
+
+// Extended AI feature suite (POST /api/ai-features/kyc-screen, /rate-analysis,
+// /beneficiary-risk, /route-optimize, /split-plan, /fraud-check, GET /receipt/:id).
+app.use('/api/ai-features', require('./routes/aiFeatures'));
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

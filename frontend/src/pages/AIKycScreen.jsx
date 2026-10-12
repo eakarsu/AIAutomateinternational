@@ -1,3 +1,6 @@
+import { recordRows } from '../services/recordRows';
+import AIReport from '../components/AIReport';
+import NativeAIPresets from '../components/NativeAIPresets';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiUserCheck, FiSearch } from 'react-icons/fi';
@@ -15,7 +18,7 @@ function AIKycScreen() {
       .list()
       .then((r) => {
         const d = r.data;
-        setBeneficiaries(Array.isArray(d) ? d : d.data || d.beneficiaries || []);
+        setBeneficiaries(recordRows(d, 'beneficiaries'));
       })
       .catch(() => {});
   }, []);
@@ -51,6 +54,7 @@ function AIKycScreen() {
       </div>
 
       <div style={{ background: 'var(--bg-secondary, #1a1f2e)', padding: 24, borderRadius: 8, marginBottom: 24 }}>
+        <NativeAIPresets kind="kyc" value={form} onChange={(next, index) => { setForm(next); setMode(index === 0 ? 'existing' : 'new'); }} records={beneficiaries} disabled={loading} />
         <div style={{ marginBottom: 16, display: 'flex', gap: 12 }}>
           <button type="button" className={`btn btn-${mode === 'existing' ? 'primary' : 'secondary'}`} onClick={() => setMode('existing')}>Existing Beneficiary</button>
           <button type="button" className={`btn btn-${mode === 'new' ? 'primary' : 'secondary'}`} onClick={() => setMode('new')}>Ad-hoc / New</button>
@@ -97,6 +101,7 @@ function AIKycScreen() {
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>Screened: {result.screened_at}</p>
         </div>
       )}
+      {result && <AIReport response={result} title="KYC Screening" />}
     </div>
   );
 }
